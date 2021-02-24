@@ -63,7 +63,7 @@ ord(M)={
  * *Mais il faudrait déjà s'assurer que la matrice est trigonalisable,*
  * *ce, à l'aide de ses vecteurs/valeurs propres (utiliser mateigen(x) ... ?), ...*
 
- * Et -5 est un générateur.
+ * Remarque -5 est un générateur de (Z/27Z)*, puisque d'ordre 18 ...
 */
 
 
