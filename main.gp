@@ -8,9 +8,11 @@ encodegln(s,n)={
 
 decodegln(M)={
   my(v);
-  v= Vec( concat(Vec(M~))~, (matsize(M)[1])*((matsize(M)[1])-1));
+  \\on concatène les entiers les uns à la suite des autres.
+  v= Vec( concat(Vec(M~))~, (matsize(M)[1])*(matsize(M)[1]) - 1);
   v;
 }
+\\On traduire en lettres les entiers.
 decode(v) = {
   v= Strchr([ if(c==0,32,c+96) | c <- v]);
   v;
@@ -60,6 +62,8 @@ ord(M)={
  * M^k = P T^k P^(-1), avec des calculs bien moins longs pour T^k.
  * *Mais il faudrait déjà s'assurer que la matrice est trigonalisable,*
  * *ce, à l'aide de ses vecteurs/valeurs propres (utiliser mateigen(x) ... ?), ...*
+
+ * Et -5 est un générateur.
 */
 
 
