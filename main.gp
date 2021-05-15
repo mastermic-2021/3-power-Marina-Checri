@@ -6,6 +6,16 @@ encodegln(s,n)={
   matrix(n,n,i,j,v[(i-1)*n+j]);
 }
 
+u27 = ffgen([3,3]);
+encodeglnbis(s,n)={
+  my(v);
+  v=[if(x==32,0,u27^(x-97))|x<-Vec(Vecsmall(s)),x==32||x>=97&&x<=122];
+  if(#v>n^2,warning("string truncated to length ",n^2));
+  v = Vec(v,n^2);
+  matrix(n,n,i,j,v[(i-1)*n+j]);
+}
+
+
 decodegln(M)={
   my(v);
   \\on concatène les entiers les uns à la suite des autres.
@@ -13,17 +23,56 @@ decodegln(M)={
   v;
 }
 \\On traduire en lettres les entiers.
-decode(v) = {
-  v= Strchr([ if(c==0,32,c+96) | c <- v]);
-  v;
+decode(v) = Strchr([ if(c==0,32,c+96) | c <- v]);
+
+decodebis(s)={
+  my(v);
+  v = vector(#s);
+  vector(#s,i, for(k=0,25, if(s[i]==0, v[i]=32,if(s[i]==u27^k, v[i]=k+97)) ) );
+  Strchr(v);
 }
+
+
+
+/* ****************************************************************************** */
+/* ******************************* Explications : ******************************* */
+/* ****************************************************************************** */
+
+
+/*
+ * Le principe est le suivant :
+ * On cherche la puissance ord pour laquelle M^ord = Id.
+ * On trouve l'inverse (n') de n modulo ord,
+   afin de pouvoir ensuite n'avoir qu'à élever M à cette puissance
+   (en effet, on a M = message^65537, donc (message^n)^n'=message^(n*n')=message).
+ * Nota Bene : c'est une simple relation de Bézout qu'il faut trouver.
+ * Ensuite, il suffira d'élever notre matrice à la puissance n'
+ * Il ne reste qu'à décoder !
+*/
+
+
+/*
+ * Une idée que je n'ai pas encore réussi à mettre en pratique est de
+ * trigonaliser la matrice avant de chercher son ordre, puisque dans ce cas,
+ * on aurait M = PTP^(-1), où T est triangulaire, et
+ * M^k = P T^k P^(-1), avec des calculs bien moins longs pour T^k.
+ * *Mais il faudrait déjà s'assurer que la matrice est trigonalisable,*
+ * *ce, à l'aide de ses vecteurs/valeurs propres (utiliser mateigen(x) ... ?), ...*
+
+ * Remarque -5 est un générateur de (Z/27Z)*, puisque d'ordre 18 ...
+*/
+
 
 
 /* ****************************************************************************** */
 /* ******************************** Fonctions : ********************************* */
 /* ****************************************************************************** */
 
-\\(fonctions écrites précédemment, pour l'exponentiation rapide d'une matrice)
+
+
+
+
+/*(fonctions écrites précédemment, pour l'exponentiation rapide d'une matrice)*/
 ExpMat(M,e) = {
 	if(e == 0, return (matid(matsize(M)[1])),
 	    if(e == 1, return (M),
@@ -43,28 +92,25 @@ IterN(M,n)={
  * élevée à la puissance k est la matrice identité.
 */
 ord(M)={
-  my(Id);
+  my(Id, k);
   Id=matid(matsize(M)[1]);
-  my(k);
   k=1;
   my(puissance);
   puissance=Mod(M,27);
-  while(puissance!=Id,puissance=puissance*M;
-	k++);
+  while(puissance!=Id, puissance=puissance*M; k++);
   k;
 }
 
+ordbis(M)={
+  my(Id, k);
+  Id=matid(matsize(M)[1]);
+  k=1;
+  my(puissance);
+  puissance=M;
+  while(puissance!=Id, puissance=puissance*M; k++);
+  k;
+}
 
-/*
- * Une idée que je n'ai pas encore réussi à mettre en pratique est de
- * trigonaliser la matrice avant de chercher son ordre, puisque dans ce cas,
- * on aurait M = PTP^(-1), où T est triangulaire, et
- * M^k = P T^k P^(-1), avec des calculs bien moins longs pour T^k.
- * *Mais il faudrait déjà s'assurer que la matrice est trigonalisable,*
- * *ce, à l'aide de ses vecteurs/valeurs propres (utiliser mateigen(x) ... ?), ...*
-
- * Remarque -5 est un générateur de (Z/27Z)*, puisque d'ordre 18 ...
-*/
 
 
 /* ****************************************************************************** */
@@ -81,16 +127,6 @@ M  = encodegln(M,12);
 /* ******************************* Application : ******************************** */
 /* ****************************************************************************** */
 
-/*
- * Le principe est le suivant :
- * On cherche la puissance ord pour laquelle M^ord = Id.
- * On trouve l'inverse (n') de n modulo ord,
-   afin de pouvoir ensuite n'avoir qu'à élever M à cette puissance
-   (en effet, on a M = message^65537, donc (message^n)^n'=message^(n*n')=message).
- * Nota Bene : c'est une simple relation de Bézout qu'il faut trouver.
- * Ensuite, il suffira d'élever notre matrice à la puissance n'
- * Il ne reste qu'à décoder !
-*/
 
 \\La matrice est dans Z/27Z :
 M = Mod(M,27);
